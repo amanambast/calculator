@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modern Calculator</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #101827, #253b5c);
+    color: white;
+}
+
+.calculator {
+    width: 100%;
+    max-width: 390px;
+    padding: 22px;
+    background: rgba(20, 28, 45, 0.96);
+    border: 1px solid #39465e;
+    border-radius: 25px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.header h2 {
+    font-size: 21px;
+}
+
+.badge {
+    font-size: 11px;
+    color: #70f0bd;
+    background: #183c3b;
+    padding: 6px 9px;
+    border-radius: 20px;
+}
+
+.display {
+    background: #0c1321;
+    padding: 18px 14px;
+    border-radius: 15px;
+    margin-bottom: 17px;
+    text-align: right;
+    overflow: hidden;
+}
+
+#expression {
+    min-height: 25px;
+    color: #91a0b8;
+    font-size: 16px;
+    overflow-wrap: anywhere;
+}
+
+#result {
+    width: 100%;
+    min-height: 48px;
+    margin-top: 8px;
+    color: #ffffff;
+    font-size: clamp(25px, 8vw, 36px);
+    font-weight: bold;
+    overflow-wrap: anywhere;
+}
+
+.buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+button {
+    min-width: 0;
+    height: 57px;
+    border: none;
+    border-radius: 13px;
+    font-size: 19px;
+    font-weight: 600;
+    color: #f4f7ff;
+    background: #27354b;
+    cursor: pointer;
+    transition: transform 0.12s, filter 0.12s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+button:active {
+    transform: scale(0.94);
+    filter: brightness(1.3);
+}
+
+button.operator {
+    color: #75caff;
+    background: #203c59;
+}
+
+button.function {
+    color: #c8b5ff;
+    background: #353052;
+}
+
+button.clear {
+    color: #ff9eaa;
+    background: #512b3b;
+}
+
+button.equal {
+    color: #08261b;
+    background: #65e6b1;
+}
+
+button.zero {
+    grid-column: span 2;
+}
+
+.footer {
+    text-align: center;
+    margin-top: 17px;
+    color: #8e9bb0;
+    font-size: 11px;
+}
+
+.history {
+    margin-top: 18px;
+    border-top: 1px solid #354157;
+    padding-top: 12px;
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.history h3 {
+    font-size: 14px;
+    color: #c5d0e2;
+}
+
+.history button {
+    height: auto;
+    padding: 5px 9px;
+    font-size: 11px;
+    background: #354157;
+}
+
+#historyList {
+    max-height: 105px;
+    overflow-y: auto;
+    list-style: none;
+    color: #aab8ce;
+    font-size: 13px;
+}
+
+#historyList li {
+    padding: 7px 2px;
+    border-bottom: 1px solid #29364b;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 360px) {
+    .calculator {
+        padding: 15px;
+    }
+
+    button {
+        height: 51px;
+        font-size: 17px;
+    }
+
+    .buttons {
+        gap: 7px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<main class="calculator">
+
+    <div class="header">
+        <h2>⚡ Calculator</h2>
+        <span class="badge">SMART CALC</span>
+    </div>
+
+    <section class="display" aria-live="polite">
+        <div id="expression">Ready to calculate</div>
+        <div id="result">0</div>
+    </section>
+
+    <section class="buttons" aria-label="Calculator buttons">
+        <button class="clear" onclick="clearAll()">AC</button>
+        <button class="clear" onclick="deleteLast()">DEL</button>
+        <button class="operator" onclick="append('%')">%</button>
+        <button class="operator" onclick="append('/')">÷</button>
+
+        <button onclick="append('7')">7</button>
+        <button onclick="append('8')">8</button>
+        <button onclick="append('9')">9</button>
+        <button class="operator" onclick="append('*')">×</button>
+
+        <button onclick="append('4')">4</button>
+        <button onclick="append('5')">5</button>
+        <button onclick="append('6')">6</button>
+        <button class="operator" onclick="append('-')">−</button>
+
+        <button onclick="append('1')">1</button>
+        <button onclick="append('2')">2</button>
+        <button onclick="append('3')">3</button>
+        <button class="operator" onclick="append('+')">+</button>
+
+        <button class="function" onclick="append('(')">(</button>
+        <button class="function" onclick="append(')')">)</button>
+        <button onclick="append('0')">0</button>
+        <button onclick="append('.')">.</button>
+
+        <button class="function" onclick="scientific('sin')">sin</button>
+        <button class="function" onclick="scientific('cos')">cos</button>
+        <button class="function" onclick="scientific('tan')">tan</button>
+        <button class="function" onclick="scientific('sqrt')">√</button>
+
+        <button class="function" onclick="scientific('log')">log</button>
+        <button class="function" onclick="scientific('ln')">ln</button>
+        <button class="function" onclick="append('^')">xʸ</button>
+        <button class="function" onclick="append('pi')">π</button>
+
+        <button class="function" onclick="scientific('square')">x²</button>
+        <button class="function" onclick="append('e')">e</button>
+        <button class="function" onclick="scientific('abs')">|x|</button>
+        <button class="equal" onclick="calculate()">=</button>
+
+        <button class="function zero" onclick="copyResult()">Copy Result</button>
+        <button class="function" onclick="toggleAngle()">DEG/RAD</button>
+    </section>
+
+    <section class="history">
+        <div class="history-header">
+            <h3>Calculation History</h3>
+            <button onclick="clearHistory()">Clear</button>
+        </div>
+        <ul id="historyList">
+            <li>No calculations yet</li>
+        </ul>
+    </section>
+
+    <div class="footer">
+        Modern Calculator · HTML · CSS · JavaScript
+    </div>
+
+</main>
+
+<script>
+const expressionDisplay = document.getElementById("expression");
+const resultDisplay = document.getElementById("result");
+const historyList = document.getElementById("historyList");
+
+let expression = "";
+let lastResult = 0;
+let angleMode = "DEG";
+let justCalculated = false;
+let history = [];
+
+function updateDisplay() {
+    expressionDisplay.textContent = expression || "Ready to calculate";
+    resultDisplay.textContent = expression || "0";
+}
+
+function append(value) {
+    if (justCalculated && /[0-9.(]/.test(value)) {
+        expression = "";
+    }
+
+    justCalculated = false;
+
+    if (expression.length >= 250) return;
+
+    expression += value;
+    updateDisplay();
+}
+
+function clearAll() {
+    expression = "";
+    justCalculated = false;
+    expressionDisplay.textContent = "Ready to calculate";
+    resultDisplay.textContent = "0";
+}
+
+function deleteLast() {
+    expression = expression.slice(0, -1);
+    justCalculated = false;
+    updateDisplay();
+}
+
+// Replace scientific notation and symbols safely.
+function prepareExpression(input) {
+    let s = input.replace(/\s+/g, "");
+
+    if (!s || s.length > 250) {
+        throw new Error("Invalid expression");
+    }
+
+    // Permit only calculator characters.
+    if (!/^[0-9+\-*/().%^a-zA-Z]+$/.test(s)) {
+        throw new Error("Invalid character");
+    }
+
+    s = s.replace(/pi/g, "PI");
+    s = s.replace(/\be\b/g, "E");
+
+    // Support percentage as a postfix operator.
+    s = s.replace(/(\d+(?:\.\d+)?|\([^()]*\))%/g, "($1/100)");
+
+    // Convert exponent notation to JavaScript's ** operator.
+    s = s.replace(/\^/g, "**");
+
+    // Allow only numbers, constants, operators and parentheses.
+    if (!/^[0-9+\-*/().*PIE]+$/.test(s)) {
+        throw new Error("Invalid expression");
+    }
+
+    s = s.replace(/PI/g, "(" + Math.PI + ")");
+    s = s.replace(/E/g, "(" + Math.E + ")");
+
+    return s;
+}
+
+// A parser avoids eval() and Function() entirely.
+function evaluate(input) {
+    const source = prepareExpression(input);
+    let index = 0;
+
+    function skipSpaces() {
+        while (source[index] === " ") index++;
+    }
+
+    function parseExpression() {
+        let value = parseTerm();
+
+        while (true) {
+            skipSpaces();
+
+            if (source[index] === "+") {
+                index++;
+                value += parseTerm();
+            } else if (source[index] === "-") {
+                index++;
+                value -= parseTerm();
+            } else {
+                break;
+            }
+        }
+
+        return value;
+    }
+
+    function parseTerm() {
+        let value = parseUnary();
+
+        while (true) {
+            skipSpaces();
+
+            if (source[index] === "*") {
+                index++;
+                value *= parseUnary();
+            } else if (source[index] === "/") {
+                index++;
+                const divisor = parseUnary();
+
+                if (divisor === 0) {
+                    throw new Error("Cannot divide by zero");
+                }
+
+                value /= divisor;
+            } else {
+                break;
+            }
+        }
+
+        return value;
+    }
+
+    function parseUnary() {
+        skipSpaces();
+
+        if (source[index] === "+") {
+            index++;
+            return parseUnary();
+        }
+
+        if (source[index] === "-") {
+            index++;
+            return -parseUnary();
+        }
+
+        return parsePower();
+    }
+
+    function parsePower() {
+        let value = parsePrimary();
+        skipSpaces();
+
+        if (source.slice(index, index + 2) === "**") {
+            index += 2;
+            value = Math.pow(value, parseUnary());
+        }
+
+        return value;
+    }
+
+    function parsePrimary() {
+        skipSpaces();
+
+        if (source[index] === "(") {
+            index++;
+            const value = parseExpression();
+            skipSpaces();
+
+            if (source[index] !== ")") {
+                throw new Error("Missing closing bracket");
+            }
+
+            index++;
+            return value;
+        }
+
+        const match = source.slice(index).match(
+            /^(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?/
+        );
+
+        if (!match) {
+            throw new Error("Invalid expression");
+        }
+
+        index += match[0].length;
+        return Number(match[0]);
+    }
+
+    const answer = parseExpression();
+    skipSpaces();
+
+    if (index !== source.length || !Number.isFinite(answer)) {
+        throw new Error("Invalid calculation");
+    }
+
+    return answer;
+}
+
+function formatNumber(number) {
+    if (!Number.isFinite(number)) {
+        throw new Error("Result is not finite");
+    }
+
+    if (Object.is(number, -0)) number = 0;
+
+    return Number(number.toPrecision(12)).toString();
+}
+
+function calculate() {
+    if (!expression) return;
+
+    try {
+        const original = expression;
+        const answer = evaluate(expression);
+        const formatted = formatNumber(answer);
+
+        expressionDisplay.textContent = original + " =";
+        resultDisplay.textContent = formatted;
+
+        history.unshift(original + " = " + formatted);
+        history = history.slice(0, 20);
+        renderHistory();
+
+        expression = formatted;
+        lastResult = answer;
+        justCalculated = true;
+    } catch (error) {
+        expressionDisplay.textContent = "Calculation error";
+        resultDisplay.textContent = error.message;
+    }
+}
+
+function scientific(type) {
+    if (!expression) return;
+
+    try {
+        const value = evaluate(expression);
+        let answer;
+
+        const radians = angleMode === "DEG"
+            ? value * Math.PI / 180
+            : value;
+
+        switch (type) {
+            case "sin":
+                answer = Math.sin(radians);
+                break;
+            case "cos":
+                answer = Math.cos(radians);
+                break;
+            case "tan":
+                answer = Math.tan(radians);
+                break;
+            case "sqrt":
+                answer = Math.sqrt(value);
+                break;
+            case "log":
+                answer = Math.log10(value);
+                break;
+            case "ln":
+                answer = Math.log(value);
+                break;
+            case "square":
+                answer = value * value;
+                break;
+            case "abs":
+                answer = Math.abs(value);
+                break;
+            default:
+                throw new Error("Unknown function");
+        }
+
+        if (!Number.isFinite(answer)) {
+            throw new Error("Math domain error");
+        }
+
+        expressionDisplay.textContent = type + "(" + expression + ") =";
+        expression = formatNumber(answer);
+        resultDisplay.textContent = expression;
+        lastResult = answer;
+        justCalculated = true;
+    } catch (error) {
+        expressionDisplay.textContent = "Calculation error";
+        resultDisplay.textContent = error.message;
+    }
+}
+
+function toggleAngle() {
+    angleMode = angleMode === "DEG" ? "RAD" : "DEG";
+    document.querySelector(".footer").textContent =
+        "Angle mode: " + angleMode + " · Modern Calculator";
+}
+
+function renderHistory() {
+    historyList.replaceChildren();
+
+    if (!history.length) {
+        const item = document.createElement("li");
+        item.textContent = "No calculations yet";
+        historyList.appendChild(item);
+        return;
+    }
+
+    history.forEach(entry => {
+        const item = document.createElement("li");
+        item.textContent = entry;
+        historyList.appendChild(item);
+    });
+}
+
+function clearHistory() {
+    history = [];
+    renderHistory();
+}
+
+async function copyResult() {
+    const value = resultDisplay.textContent;
+
+    try {
+        await navigator.clipboard.writeText(value);
+        expressionDisplay.textContent = "Result copied!";
+    } catch {
+        expressionDisplay.textContent =
+            "Clipboard unavailable — select result to copy";
+    }
+}
+
+document.addEventListener("keydown", event => {
+    if (/^[0-9.]$/.test(event.key)) {
+        append(event.key);
+    } else if (["+", "-", "*", "/", "(", ")", "%"].includes(event.key)) {
+        append(event.key);
+    } else if (event.key === "^") {
+        append("^");
+    } else if (event.key === "Enter" || event.key === "=") {
+        event.preventDefault();
+        calculate();
+    } else if (event.key === "Backspace") {
+        deleteLast();
+    } else if (event.key === "Escape") {
+        clearAll();
+    }
+});
+</script>
+
+</body>
+</html>
